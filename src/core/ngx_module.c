@@ -27,6 +27,7 @@ ngx_preinit_modules(void)
 {
     ngx_uint_t  i;
 
+	// 根据模块在ngx_modules数组中的下标，初始化为该模块的索引，并初始化模块名字
     for (i = 0; ngx_modules[i]; i++) {
         ngx_modules[i]->index = i;
         ngx_modules[i]->name = ngx_module_names[i];

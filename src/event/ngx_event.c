@@ -241,22 +241,26 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     delta = ngx_current_msec;
 
     (void) ngx_process_events(cycle, timer, flags);
-
+	
+	// delta=当前时间 - 执行ngx_process_events时间(处理网络时间、超时等)
+	// delta大于0，说明已经过去了一段时间，需要处理定时器
     delta = ngx_current_msec - delta;
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
 
+	// 处理新连接到达事件
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
     if (ngx_accept_mutex_held) {
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
-
+	// 处理到期定时器
     if (delta) {
         ngx_event_expire_timers();
     }
-
+	
+	// 处理数据到达事件
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 

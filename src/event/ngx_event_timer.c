@@ -64,11 +64,12 @@ ngx_event_expire_timers(void)
         if (root == sentinel) {
             return;
         }
-
+		
+		// 从红黑树取出节点
         node = ngx_rbtree_min(root, sentinel);
 
         /* node->key > ngx_current_msec */
-
+		// 时间未到，返回
         if ((ngx_msec_int_t) (node->key - ngx_current_msec) > 0) {
             return;
         }
@@ -90,7 +91,8 @@ ngx_event_expire_timers(void)
         ev->timer_set = 0;
 
         ev->timedout = 1;
-
+		
+		// 执行定时器事件句柄
         ev->handler(ev);
     }
 }

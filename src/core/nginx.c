@@ -225,6 +225,10 @@ main(int argc, char *const *argv)
     /* TODO */ ngx_max_sockets = -1;
 
 	// 初始化时间
+	// nginx 自身维护时间
+	// 以时间槽的方式维护
+	// (时间槽最大为64，超过后从0重新循环 ngx_timer_signal_handlerngx_timer_signal_handler 负责时间更新)
+	// @https://blog.csdn.net/wu5215080/article/details/53214299
     ngx_time_init();
 
 #if (NGX_PCRE)
@@ -269,11 +273,12 @@ main(int argc, char *const *argv)
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
-
+	// 解析程序命令行选项
     if (ngx_process_options(&init_cycle) != NGX_OK) {
         return 1;
     }
 
+	// 初始化一些系统参数
     if (ngx_os_init(log) != NGX_OK) {
         return 1;
     }
@@ -344,6 +349,7 @@ main(int argc, char *const *argv)
         return 0;
     }
 
+	// 程序是否发送信号
     if (ngx_signal) {
         return ngx_signal_process(cycle, ngx_signal);
     }
@@ -998,6 +1004,7 @@ ngx_process_options(ngx_cycle_t *cycle)
 #endif
     }
 
+	// 是否制定配置文件，指定则使用，没指定则采用默认配置文件
     if (ngx_conf_file) {
         cycle->conf_file.len = ngx_strlen(ngx_conf_file);
         cycle->conf_file.data = ngx_conf_file;
@@ -1006,6 +1013,7 @@ ngx_process_options(ngx_cycle_t *cycle)
         ngx_str_set(&cycle->conf_file, NGX_CONF_PATH);
     }
 
+	// 获取配置文件绝对路径???
     if (ngx_conf_full_name(cycle, &cycle->conf_file, 0) != NGX_OK) {
         return NGX_ERROR;
     }

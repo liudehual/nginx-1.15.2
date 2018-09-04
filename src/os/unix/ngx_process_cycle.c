@@ -752,13 +752,15 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
 
+		// 处理事件和定时器
         ngx_process_events_and_timers(cycle);
 
+		// 强行退出
         if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
             ngx_worker_process_exit(cycle);
         }
-
+		// 优雅退出
         if (ngx_quit) {
             ngx_quit = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,

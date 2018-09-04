@@ -19,7 +19,8 @@ ngx_event_process_posted(ngx_cycle_t *cycle, ngx_queue_t *posted)
 {
     ngx_queue_t  *q;
     ngx_event_t  *ev;
-
+	
+	// bianzhi队列执行所有事件句柄
     while (!ngx_queue_empty(posted)) {
 
         q = ngx_queue_head(posted);

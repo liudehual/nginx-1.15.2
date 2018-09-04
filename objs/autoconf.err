@@ -204,7 +204,7 @@ cc -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -o objs/autotest objs/autotest.c
 ----------------------------------------
 checking for crypt()
 
-/tmp/cc3bP7pt.o: In function `main':
+/tmp/cc4LPlvg.o: In function `main':
 autotest.c:(.text+0xf): undefined reference to `crypt'
 collect2: error: ld returned 1 exit status
 ----------
@@ -315,7 +315,7 @@ checking for statvfs()
 ----------------------------------------
 checking for dlopen()
 
-/tmp/cc97kv4I.o: In function `main':
+/tmp/cc8gPCtz.o: In function `main':
 autotest.c:(.text+0xf): undefined reference to `dlopen'
 autotest.c:(.text+0x1e): undefined reference to `dlsym'
 collect2: error: ld returned 1 exit status
@@ -538,27 +538,6 @@ checking for TCP_KEEPIDLE
 ----------------------------------------
 checking for TCP_FASTOPEN
 
-objs/autotest.c: In function 'main':
-objs/autotest.c:9:32: error: 'TCP_FASTOPEN' undeclared (first use in this function)
-     setsockopt(0, IPPROTO_TCP, TCP_FASTOPEN, NULL, 0);
-                                ^
-objs/autotest.c:9:32: note: each undeclared identifier is reported only once for each function it appears in
-----------
-
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/socket.h>
-                  #include <netinet/in.h>
-                  #include <netinet/tcp.h>
-
-int main(void) {
-    setsockopt(0, IPPROTO_TCP, TCP_FASTOPEN, NULL, 0);
-    return 0;
-}
-
-----------
-cc -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -o objs/autotest objs/autotest.c
-----------
 
 ----------------------------------------
 checking for TCP_INFO
@@ -569,7 +548,32 @@ checking for accept4()
 
 
 ----------------------------------------
-checking for eventfd()
+checking for kqueue AIO support
+
+objs/autotest.c: In function 'main':
+objs/autotest.c:8:56: error: 'SIGEV_KEVENT' undeclared (first use in this function)
+                       iocb.aio_sigevent.sigev_notify = SIGEV_KEVENT;
+                                                        ^
+objs/autotest.c:8:56: note: each undeclared identifier is reported only once for each function it appears in
+----------
+
+#include <sys/types.h>
+#include <unistd.h>
+#include <aio.h>
+
+int main(void) {
+    struct aiocb  iocb;
+                      iocb.aio_sigevent.sigev_notify = SIGEV_KEVENT;
+                      (void) aio_read(&iocb);
+    return 0;
+}
+
+----------
+cc -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -o objs/autotest objs/autotest.c
+----------
+
+----------------------------------------
+checking for Linux AIO support
 
 
 ----------------------------------------
@@ -647,7 +651,7 @@ checking for AF_INET6
 ----------------------------------------
 checking for setproctitle()
 
-/tmp/cc6XBRdl.o: In function `main':
+/tmp/ccLDLVKz.o: In function `main':
 autotest.c:(.text+0xf): undefined reference to `setproctitle'
 collect2: error: ld returned 1 exit status
 ----------
@@ -680,6 +684,8 @@ checking for pwritev()
 ----------------------------------------
 checking for sys_nerr
 
+/tmp/cckM4LcN.o: In function `main':
+autotest.c:(.text+0x6): warning: `sys_nerr' is deprecated; use `strerror' or `strerror_r' instead
 135
 ----------------------------------------
 checking for localtime_r()
@@ -712,7 +718,7 @@ checking for System V shared memory
 ----------------------------------------
 checking for POSIX semaphores
 
-/tmp/ccK3bwcP.o: In function `main':
+/tmp/ccTKa0Qj.o: In function `main':
 autotest.c:(.text+0x1a): undefined reference to `sem_init'
 autotest.c:(.text+0x32): undefined reference to `sem_destroy'
 collect2: error: ld returned 1 exit status
@@ -794,16 +800,4 @@ checking for openat(), fstatat()
 
 ----------------------------------------
 checking for getaddrinfo()
-
-
-----------------------------------------
-checking for PCRE library
-
-
-----------------------------------------
-checking for PCRE JIT support
-
-
-----------------------------------------
-checking for zlib library
 

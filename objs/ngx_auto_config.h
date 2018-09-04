@@ -1,7 +1,12 @@
-#define NGX_CONFIGURE ""
+#define NGX_CONFIGURE " --prefix=/usr/local/nginx-1.15.2 --with-threads --with-file-aio --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-debug --without-http_rewrite_module --without-http_gzip_module"
+
+#ifndef NGX_DEBUG
+#define NGX_DEBUG  1
+#endif
+
 
 #ifndef NGX_COMPILER
-#define NGX_COMPILER  "gcc 4.8.5 20150623 (Red Hat 4.8.5-11) (GCC) "
+#define NGX_COMPILER  "gcc 4.8.5 20150623 (Red Hat 4.8.5-28) (GCC) "
 #endif
 
 
@@ -158,6 +163,11 @@
 #endif
 
 
+#ifndef NGX_HAVE_TCP_FASTOPEN
+#define NGX_HAVE_TCP_FASTOPEN  1
+#endif
+
+
 #ifndef NGX_HAVE_TCP_INFO
 #define NGX_HAVE_TCP_INFO  1
 #endif
@@ -165,6 +175,11 @@
 
 #ifndef NGX_HAVE_ACCEPT4
 #define NGX_HAVE_ACCEPT4  1
+#endif
+
+
+#ifndef NGX_HAVE_FILE_AIO
+#define NGX_HAVE_FILE_AIO  1
 #endif
 
 
@@ -338,13 +353,13 @@
 #endif
 
 
-#ifndef NGX_HTTP_CACHE
-#define NGX_HTTP_CACHE  1
+#ifndef NGX_THREADS
+#define NGX_THREADS  1
 #endif
 
 
-#ifndef NGX_HTTP_GZIP
-#define NGX_HTTP_GZIP  1
+#ifndef NGX_HTTP_CACHE
+#define NGX_HTTP_CACHE  1
 #endif
 
 
@@ -353,8 +368,33 @@
 #endif
 
 
+#ifndef NGX_HTTP_V2
+#define NGX_HTTP_V2  1
+#endif
+
+
+#ifndef NGX_HTTP_HEADERS
+#define NGX_HTTP_HEADERS  1
+#endif
+
+
+#ifndef NGX_HTTP_DAV
+#define NGX_HTTP_DAV  1
+#endif
+
+
 #ifndef NGX_CRYPT
 #define NGX_CRYPT  1
+#endif
+
+
+#ifndef NGX_HTTP_REALIP
+#define NGX_HTTP_REALIP  1
+#endif
+
+
+#ifndef NGX_HTTP_X_FORWARDED_FOR
+#define NGX_HTTP_X_FORWARDED_FOR  1
 #endif
 
 
@@ -373,23 +413,8 @@
 #endif
 
 
-#ifndef NGX_PCRE
-#define NGX_PCRE  1
-#endif
-
-
-#ifndef NGX_HAVE_PCRE_JIT
-#define NGX_HAVE_PCRE_JIT  1
-#endif
-
-
-#ifndef NGX_ZLIB
-#define NGX_ZLIB  1
-#endif
-
-
 #ifndef NGX_PREFIX
-#define NGX_PREFIX  "/usr/local/nginx/"
+#define NGX_PREFIX  "/usr/local/nginx-1.15.2/"
 #endif
 
 
