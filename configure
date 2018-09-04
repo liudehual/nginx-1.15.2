@@ -1,0 +1,179 @@
+#!/bin/sh
+
+## Copyright (C) Igor Sysoev
+## Copyright (C) Nginx, Inc.
+
+## nginx 结构树图
+## .
+## ├── auto            自动检测系统环境以及编译相关的脚本
+## │   ├── cc          关于编译器相关的编译选项的检测脚本
+## │   ├── lib         nginx编译所需要的一些库的检测脚本
+## │   ├── os          与平台相关的一些系统参数与系统调用相关的检测
+## │   └── types       与数据类型相关的一些辅助脚本
+## ├── conf            存放默认配置文件，在make install后，会拷贝到安装目录中去
+## ├── contrib         存放一些实用工具，如geo配置生成工具（geo2nginx.pl）
+## ├── html            存放默认的网页文件，在make install后，会拷贝到安装目录中去
+## ├── man             nginx的man手册
+## └── src             存放nginx的源代码
+##     ├── core        nginx的核心源代码，包括常用数据结构的定义，以及nginx初始化运行的核心代码如main函数
+##     ├── event       对系统事件处理机制的封装，以及定时器的实现相关代码
+##     │   └── modules 不同事件处理方式的模块化，如select、poll、epoll、kqueue等
+##     ├── http        nginx作为http服务器相关的代码
+##     │   └── modules 包含http的各种功能模块
+##     ├── mail        nginx作为邮件代理服务器相关的代码
+##     ├── misc        一些辅助代码，测试c++头的兼容性，以及对google_perftools的支持
+##     └── os          主要是对各种不同体系统结构所提供的系统函数的封装，对外提供统一的系统调用接口
+
+
+## 导入编译器
+LC_ALL=C
+export LC_ALL
+echo "LC_ALL=$LC_ALL"
+## 执行auto/options文件中的命令，行中的“.”表示在当前的sh环境中执行auto/options
+## 文件中的命令（与source命令效果一样）不同于sh命令会导致创建子进程，由于configure
+## 文件中命令与options的命令都在同一sh环境下，所以变量在两个文件中都是彼此可见的
+## 设置变量，并将之置空
+. auto/options
+
+## 初始化一些变量诸如：NGX_AUTO_HEADERS_H=$NGX_OBJS/ngx_auto_headers.h
+. auto/init
+
+## 设置核心模块、平台代码对应的源文件
+. auto/sources
+
+## 探测是否存在objs目录，不存在则创建
+test -d $NGX_OBJS || mkdir -p $NGX_OBJS
+
+## 开始准备建立ngx_auto_headers.h、autoconf.err等必要的编译文件
+echo "NGX_AUTO_HEADERS_H---> $NGX_AUTO_HEADERS_H"
+echo "NGX_AUTOCONF_ERR---> $NGX_AUTOCONF_ERR"
+
+echo > $NGX_AUTO_HEADERS_H
+echo > $NGX_AUTOCONF_ERR
+
+## 向objs/ngx_auto_config.h写入命令行带的参数
+echo "#define NGX_CONFIGURE \"$NGX_CONFIGURE\"" > $NGX_AUTO_CONFIG_H
+
+## 设置NGX_DEBUG=1
+## NGX_DEBUG是在auto/options文件中处理的，如果有--with-debug选项，则其值是YES
+if [ $NGX_DEBUG = YES ]; then
+    have=NGX_DEBUG . auto/have 
+fi
+
+## 现在开始检查操作系统参数是否支持后续编译
+if test -z "$NGX_PLATFORM"; then
+    echo "checking for OS"
+
+    NGX_SYSTEM=`uname -s 2>/dev/null`
+    NGX_RELEASE=`uname -r 2>/dev/null`
+    NGX_MACHINE=`uname -m 2>/dev/null`
+
+	#屏幕上输出OS名称、内核版本、32位/64位内核
+    echo " + $NGX_SYSTEM $NGX_RELEASE $NGX_MACHINE"
+
+    NGX_PLATFORM="$NGX_SYSTEM:$NGX_RELEASE:$NGX_MACHINE";
+
+    case "$NGX_SYSTEM" in
+        MINGW32_* | MINGW64_* | MSYS_*)
+            NGX_PLATFORM=win32
+        ;;
+    esac
+
+else
+    echo "building for $NGX_PLATFORM"
+    NGX_SYSTEM=$NGX_PLATFORM
+fi
+
+## 检查并设置编译器，如GCC是否安装、GCC版本是否支持后续编译nginx
+. auto/cc/conf
+
+## 检查相关头文件，并将结果输出到ngx_auto_headers.h文件中
+if [ "$NGX_PLATFORM" != win32 ]; then
+    . auto/headers
+fi
+
+## 对于当前操作系统，定义一些特定的操作系统相关的方法并检查当前环境是否支持。
+## 例如，对于Linux，在这里使用sched_setaffinity设置进程优先级，
+## 使用Linux特有的sendfile系统调用来加速向网络中发送文件块
+. auto/os/conf
+
+## 对非Windows操作系统定义一些必要的头文件，并检查其是否存在，以此决定configure后续步骤是否可以成功
+if [ "$NGX_PLATFORM" != win32 ]; then
+    . auto/unix
+fi
+
+. auto/threads
+
+## 统计要编译到nginx中的模块信息，创建并初始化ngx_module_t *ngx_modules[]和
+## char *ngx_module_names[]两个数组中（这两个数组在init_cycle中被调用）存放
+## 到之前创建的nginx/objs/ngx_modules.c文件中
+. auto/modules
+
+## conf脚本用来检查Nginx在链接期间需要链接的第三方静态库、动态库或者目标文件是否存在
+. auto/lib/conf
+
+## 设置编译安装输出目录
+case ".$NGX_PREFIX" in
+    .)
+        NGX_PREFIX=${NGX_PREFIX:-/usr/local/nginx}
+        have=NGX_PREFIX value="\"$NGX_PREFIX/\"" . auto/define
+    ;;
+
+    .!)
+        NGX_PREFIX=
+    ;;
+
+    *)
+        have=NGX_PREFIX value="\"$NGX_PREFIX/\"" . auto/define
+    ;;
+esac
+
+## 处理Nginx安装后conf文件的路径
+if [ ".$NGX_CONF_PREFIX" != "." ]; then
+    have=NGX_CONF_PREFIX value="\"$NGX_CONF_PREFIX/\"" . auto/define
+fi
+
+## 处理Nginx安装后，二进制文件、pid、lock等其他文件的路径可参见configure参数中路径类选项的说明
+have=NGX_SBIN_PATH value="\"$NGX_SBIN_PATH\"" . auto/define
+have=NGX_CONF_PATH value="\"$NGX_CONF_PATH\"" . auto/define
+have=NGX_PID_PATH value="\"$NGX_PID_PATH\"" . auto/define
+have=NGX_LOCK_PATH value="\"$NGX_LOCK_PATH\"" . auto/define
+have=NGX_ERROR_LOG_PATH value="\"$NGX_ERROR_LOG_PATH\"" . auto/define
+
+have=NGX_HTTP_LOG_PATH value="\"$NGX_HTTP_LOG_PATH\"" . auto/define
+have=NGX_HTTP_CLIENT_TEMP_PATH value="\"$NGX_HTTP_CLIENT_TEMP_PATH\""
+. auto/define
+have=NGX_HTTP_PROXY_TEMP_PATH value="\"$NGX_HTTP_PROXY_TEMP_PATH\""
+. auto/define
+have=NGX_HTTP_FASTCGI_TEMP_PATH value="\"$NGX_HTTP_FASTCGI_TEMP_PATH\""
+. auto/define
+have=NGX_HTTP_UWSGI_TEMP_PATH value="\"$NGX_HTTP_UWSGI_TEMP_PATH\""
+. auto/define
+have=NGX_HTTP_SCGI_TEMP_PATH value="\"$NGX_HTTP_SCGI_TEMP_PATH\""
+. auto/define
+
+## 创建编译时使用的objs/Makefile文件
+. auto/make
+
+## 为objs/Makefile加入需要连接的第三方静态库、动态库或者目标文件
+. auto/lib/make
+
+## 为objs/Makefile加入install功能，当执行make install时将编译生成的必要文件复制到安装路径，建立必要的目录
+. auto/install
+
+## 在ngx_auto_config.h文件中加入NGX_SUPPRESS_WARN宏、NGX_SMP宏
+## STUB
+. auto/stubs
+
+## 在ngx_auto_config.h文件中指定NGX_USER和NGX_GROUP宏，如果执行configure时没有参数指定，
+## 默认两者皆为nobody（也就是默认以nobody用户运行进程）
+have=NGX_USER value="\"$NGX_USER\"" . auto/define
+have=NGX_GROUP value="\"$NGX_GROUP\"" . auto/define
+
+
+if [ ".$NGX_BUILD" != "." ]; then
+    have=NGX_BUILD value="\"$NGX_BUILD\"" . auto/define
+fi
+
+## 显示configure执行的结果，如果失败，则给出原因
+. auto/summary
