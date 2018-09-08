@@ -59,8 +59,10 @@ ngx_event_expire_timers(void)
     sentinel = ngx_event_timer_rbtree.sentinel;
 
     for ( ;; ) {
+		// 取出红黑树根节点
         root = ngx_event_timer_rbtree.root;
 
+		//root 等于哨兵，没有找到，返回
         if (root == sentinel) {
             return;
         }
@@ -74,6 +76,7 @@ ngx_event_expire_timers(void)
             return;
         }
 
+		// 获取定时器事件
         ev = (ngx_event_t *) ((char *) node - offsetof(ngx_event_t, timer));
 
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
@@ -87,7 +90,7 @@ ngx_event_expire_timers(void)
         ev->timer.right = NULL;
         ev->timer.parent = NULL;
 #endif
-
+		//清空时间信息
         ev->timer_set = 0;
 
         ev->timedout = 1;

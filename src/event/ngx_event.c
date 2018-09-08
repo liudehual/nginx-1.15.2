@@ -220,7 +220,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
             ngx_accept_disabled--;
 
         } else {
-        	// 连接请求接收锁
+        	// 连接请求接收锁 实现原理???
             if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
                 return;
             }

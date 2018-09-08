@@ -32,7 +32,8 @@ ngx_preinit_modules(void)
         ngx_modules[i]->index = i;
         ngx_modules[i]->name = ngx_module_names[i];
     }
-
+	
+	// 记录模块数量
     ngx_modules_n = i;
     ngx_max_module = ngx_modules_n + NGX_MAX_DYNAMIC_MODULES;
 
