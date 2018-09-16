@@ -379,29 +379,31 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             continue;
         }
 
+
+
+        for ( /* void */ ; cmd->name.len; cmd++) {
+
+
+            if (name->len != cmd->name.len) {
+                continue;
+            }
+			// Æ¥ÅäÃüÁîÃû
+            if (ngx_strcmp(name->data, cmd->name.data) != 0) {
+                continue;
+            }
 #ifdef MY_DEBUG
 			ngx_log_stderr(0,"-----------------------------------------------"
 							 "-----------------------------------------------"
 							 "\n[%s][%d]",__FUNCTION__,__LINE__);
 #endif
-
-        for ( /* void */ ; cmd->name.len; cmd++) {
 #ifdef MY_DEBUG
-				ngx_log_stderr(0,"[%s][%d] cf->cycle->modules[%d]->commands->name=%s",
-									__FUNCTION__,
-									__LINE__,
-									i,
-									cmd->name.data
-									);
+							ngx_log_stderr(0,"[%s][%d] cf->cycle->modules[%d]->commands->name=%s",
+												__FUNCTION__,
+												__LINE__,
+												i,
+												cmd->name.data
+												);
 #endif
-
-            if (name->len != cmd->name.len) {
-                continue;
-            }
-
-            if (ngx_strcmp(name->data, cmd->name.data) != 0) {
-                continue;
-            }
 
             found = 1;
 
@@ -466,7 +468,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             /* set up the directive's configuration context */
 
             conf = NULL;
-
+			//
             if (cmd->type & NGX_DIRECT_CONF) {
                 conf = ((void **) cf->ctx)[cf->cycle->modules[i]->index];
 
