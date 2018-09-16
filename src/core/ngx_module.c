@@ -31,12 +31,27 @@ ngx_preinit_modules(void)
     for (i = 0; ngx_modules[i]; i++) {
         ngx_modules[i]->index = i;
         ngx_modules[i]->name = ngx_module_names[i];
+	#ifdef MY_DEBUG
+		ngx_log_stderr(0,"[%s][%d] ngx_modules[%d]->index=%d,"
+						 "ngx_modules[%d]->name=%s ",
+						 __FUNCTION__,
+						 __LINE__,
+						 i,
+						 ngx_modules[i]->index,
+						 i,
+						 ngx_modules[i]->name);
+	#endif
     }
 	
 	// 记录模块数量
     ngx_modules_n = i;
     ngx_max_module = ngx_modules_n + NGX_MAX_DYNAMIC_MODULES;
-
+	#ifdef MY_DEBUG
+	ngx_log_stderr(0,"[%s][%d] ngx_max_module=%lu ",
+							__FUNCTION__,
+							__LINE__,
+							ngx_max_module);
+	#endif
     return NGX_OK;
 }
 
@@ -71,7 +86,15 @@ ngx_init_modules(ngx_cycle_t *cycle)
 
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->init_module) {
-            if (cycle->modules[i]->init_module(cycle) != NGX_OK) {
+			#ifdef MY_DEBUG
+				ngx_log_stderr(0,"[%s][%d]"
+								 "cycle->modules[%d]->name=%s",
+								 __FUNCTION__,
+								 __LINE__,
+								 i,
+								 cycle->modules[i]->name);
+			#endif
+			if (cycle->modules[i]->init_module(cycle) != NGX_OK) {
                 return NGX_ERROR;
             }
         }

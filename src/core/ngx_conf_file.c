@@ -178,7 +178,13 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         /* open configuration file */
 
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
-
+		#ifdef MY_DEBUG
+		ngx_log_stderr(0,"[%s][%d] "
+						 "filename->data=%s",
+						 __FUNCTION__,
+						 __LINE__,
+						 filename->data);
+		#endif
         if (fd == NGX_INVALID_FILE) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
                                ngx_open_file_n " \"%s\" failed",
@@ -190,6 +196,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
         cf->conf_file = &conf_file;
 
+		// 获取配置文件信息
         if (ngx_fd_info(fd, &cf->conf_file->file.info) == NGX_FILE_ERROR) {
             ngx_log_error(NGX_LOG_EMERG, cf->log, ngx_errno,
                           ngx_fd_info_n " \"%s\" failed", filename->data);
@@ -300,7 +307,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected \"{\"");
                 goto failed;
             }
-			// 执行模块指定的钩子函数
+
             rv = (*cf->handler)(cf, NULL, cf->handler_conf);
             if (rv == NGX_CONF_OK) {
                 continue; // 模块钩子函数执行成功，继续循环处理下一个配置项
@@ -372,7 +379,21 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             continue;
         }
 
+#ifdef MY_DEBUG
+			ngx_log_stderr(0,"-----------------------------------------------"
+							 "-----------------------------------------------"
+							 "\n[%s][%d]",__FUNCTION__,__LINE__);
+#endif
+
         for ( /* void */ ; cmd->name.len; cmd++) {
+#ifdef MY_DEBUG
+				ngx_log_stderr(0,"[%s][%d] cf->cycle->modules[%d]->commands->name=%s",
+									__FUNCTION__,
+									__LINE__,
+									i,
+									cmd->name.data
+									);
+#endif
 
             if (name->len != cmd->name.len) {
                 continue;
@@ -461,6 +482,8 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             }
 			
 			// 执行模块的set钩子函数
+			// 执行模块指定的钩子函数
+			// 如：http{} 则执行 ngx_http_block 等
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {

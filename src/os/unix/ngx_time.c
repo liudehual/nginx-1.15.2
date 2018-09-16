@@ -48,6 +48,9 @@ ngx_timezone_update(void)
     t = localtime(&s);
 
     strftime(buf, 4, "%H", t);
+	#ifdef MY_DEBUG
+	ngx_log_stderr(0,"[%s][%d] buf=%s",__FUNCTION__,__LINE__,buf);
+	#endif
 
 #endif
 }

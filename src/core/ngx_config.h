@@ -10,6 +10,7 @@
 
 #include <ngx_auto_headers.h>
 
+#define MY_DEBUG
 
 #if defined __DragonFly__ && !defined __FreeBSD__
 #define __FreeBSD__        4

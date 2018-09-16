@@ -1,4 +1,4 @@
-#define NGX_CONFIGURE " --prefix=/usr/local/nginx-1.15.2 --with-threads --with-file-aio --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-debug --without-http_rewrite_module --without-http_gzip_module"
+#define NGX_CONFIGURE " --prefix=/usr/local/nginx-1.15.2 --with-threads --with-file-aio --with-http_v2_module --with-http_realip_module --with-http_addition_module --with-http_sub_module --with-http_dav_module --with-http_flv_module --with-http_mp4_module --with-debug --without-http_rewrite_module --without-http_gzip_module --with-debug"
 
 #ifndef NGX_DEBUG
 #define NGX_DEBUG  1

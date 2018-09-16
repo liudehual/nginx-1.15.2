@@ -231,11 +231,15 @@ main(int argc, char *const *argv)
 	// @https://blog.csdn.net/wu5215080/article/details/53214299
     ngx_time_init();
 
+	// 检测是否支持正则表达式
 #if (NGX_PCRE)
     ngx_regex_init();
 #endif
 
+	// 获取进程ID
     ngx_pid = ngx_getpid();
+
+	// 获取父进程ID
     ngx_parent = ngx_getppid();
 
 	// 初始化log
@@ -399,7 +403,8 @@ main(int argc, char *const *argv)
         }
     }
 
-    ngx_use_stderr = 0;
+	// 将所有输出全部重定向到stderr(不成功???)
+    //ngx_use_stderr = 0;
 
     if (ngx_process == NGX_PROCESS_SINGLE) {
         ngx_single_process_cycle(cycle);
@@ -491,6 +496,7 @@ ngx_add_inherited_sockets(ngx_cycle_t *cycle)
         return NGX_OK;
     }
 
+	ngx_log_stderr(0,"inherited=%s \n",inherited);
 	// 开始继承旧nginx进程 Socket 描述符
     ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
                   "using inherited sockets from \"%s\"", inherited);
@@ -524,6 +530,7 @@ ngx_add_inherited_sockets(ngx_cycle_t *cycle)
             }
 
             ngx_memzero(ls, sizeof(ngx_listening_t));
+
 
             ls->fd = (ngx_socket_t) s;
         }
@@ -949,8 +956,9 @@ ngx_process_options(ngx_cycle_t *cycle)
 {
     u_char  *p;
     size_t   len;
-
+	
     if (ngx_prefix) {
+		ngx_log_stderr(0,"ngx_prefix=%s \n",ngx_prefix);
         len = ngx_strlen(ngx_prefix);
         p = ngx_prefix;
 
@@ -1002,10 +1010,12 @@ ngx_process_options(ngx_cycle_t *cycle)
         ngx_str_set(&cycle->prefix, NGX_PREFIX);
 
 #endif
+		ngx_log_stderr(0,"cycle->prefix=%s \n",cycle->prefix.data);
     }
 
 	// 是否制定配置文件，指定则使用，没指定则采用默认配置文件
     if (ngx_conf_file) {
+		ngx_log_stderr(0,"ngx_conf_file=%s \n",ngx_conf_file);
         cycle->conf_file.len = ngx_strlen(ngx_conf_file);
         cycle->conf_file.data = ngx_conf_file;
 

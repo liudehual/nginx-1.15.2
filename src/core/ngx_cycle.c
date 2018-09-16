@@ -92,6 +92,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
+	#ifdef MY_DEBUG
+	ngx_log_stderr(0,"[%s][%d] "
+					 "cycle->conf_prefix.len=%d "
+					 "cycle->conf_prefix.data=%s",
+					 __FUNCTION__,
+					 __LINE__,
+					 cycle->conf_prefix.len,
+					 cycle->conf_prefix.data);
+	#endif
 	
 	// 初始化程序路径
     cycle->prefix.len = old_cycle->prefix.len;
@@ -100,6 +109,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
+	#ifdef MY_DEBUG
+	ngx_log_stderr(0,"[%s][%d] "
+					 "cycle->prefix.len=%d "
+					 "cycle->prefix.data=%s",
+					 __FUNCTION__,
+					 __LINE__,
+					 cycle->prefix.len,
+					 cycle->prefix.data);
+	#endif
 
 	// 初始化配置文件名
     cycle->conf_file.len = old_cycle->conf_file.len;
@@ -108,6 +126,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
+#ifdef MY_DEBUG
+	ngx_log_stderr(0,"[%s][%d] "
+					 "cycle->conf_file.len=%d "
+					 "cycle->conf_file.data=%s",
+					 __FUNCTION__,
+					 __LINE__,
+					 cycle->conf_file.len,
+					 cycle->conf_file.data);
+#endif
 
 	// 获取配置文件
     ngx_cpystrn(cycle->conf_file.data, old_cycle->conf_file.data,
@@ -119,9 +146,25 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
+#ifdef MY_DEBUG
+		ngx_log_stderr(0,"[%s][%d] "
+						 "cycle->conf_param.len=%d "
+						 "cycle->conf_param.data=%s",
+						 __FUNCTION__,
+						 __LINE__,
+						 cycle->conf_param.len,
+						 cycle->conf_param.data);
+#endif
 
 	// 配置路径数组数量
     n = old_cycle->paths.nelts ? old_cycle->paths.nelts : 10;
+#ifdef MY_DEBUG
+			ngx_log_stderr(0,"[%s][%d] "
+							 "n=%d ",
+							 __FUNCTION__,
+							 __LINE__,
+							 n);
+#endif
 
 	// 初始化路径，为路径申请内存
     if (ngx_array_init(&cycle->paths, pool, n, sizeof(ngx_path_t *))
@@ -192,7 +235,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_memzero(cycle->listening.elts, n * sizeof(ngx_listening_t));
 
-
+	// 初始化队列
     ngx_queue_init(&cycle->reusable_connections_queue);
 
 
@@ -219,10 +262,21 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
+#ifdef MY_DEBUG
+			ngx_log_stderr(0,"[%s][%d] "
+							 "cycle->hostname.len=%d "
+							 "cycle->hostname.data=%s",
+							 __FUNCTION__,
+							 __LINE__,
+							 cycle->hostname.len,
+							 cycle->hostname.data);
+#endif
+
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
-
+	// 拷贝模块数组
+	// 将ngx_modules数组拷贝到cycle->modules中，并记录模块总数量
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
@@ -243,13 +297,34 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 ngx_destroy_pool(pool);
                 return NULL;
             }
+			#ifdef MY_DEBUG
+			ngx_log_stderr(0,"[%s][%d]"
+                           "cycle->modules[%d]: "
+                           "name=%s "
+                           "ctx_index=%d",
+                           __FUNCTION__,
+                           __LINE__,
+                           i,
+                           cycle->modules[i]->name,
+                           cycle->modules[i]->index);
+			#endif
             cycle->conf_ctx[cycle->modules[i]->index] = rv;
         }
     }
 
-
+	// 设置系统环境变量
     senv = environ;
+	#ifdef MY_DEBUG
+		for(i=0;environ[i]!=NULL;i++){
+			ngx_log_stderr(0,
+						   "[%s][%d] environ[%d]=%s ",
+						   __FUNCTION__,
+						   __LINE__,
+						   i,
+						   environ[i]);
+		}
 
+	#endif
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
@@ -276,13 +351,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-
+	// 初始化配置文件参数
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-	// 解析配置文件(nginx.conf)
+	// 解析配置文件(nginx.conf)(此处需要详细分析)
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -293,7 +368,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_log_stderr(0, "the configuration file %s syntax is ok",
                        cycle->conf_file.data);
     }
-
+	// 初始化所有核心模块
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -310,6 +385,17 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 ngx_destroy_cycle_pools(&conf);
                 return NULL;
             }
+			#ifdef MY_DEBUG
+			ngx_log_stderr(0,"[%s][%d]"
+                           "cycle->modules[%d]: "
+                           "name=%s "
+                           "ctx_index=%d",
+                           __FUNCTION__,
+                           __LINE__,
+                           i,
+                           cycle->modules[i]->name,
+                           cycle->modules[i]->index);
+			#endif
         }
     }
 
@@ -363,7 +449,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
     /* open the new files */
-
+	// 创建新文件(error.log/access.log等文件)
     part = &cycle->open_files.part;
     file = part->elts;
 
@@ -381,7 +467,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         if (file[i].name.len == 0) {
             continue;
         }
-
+		#ifdef MY_DEBUG
+			ngx_log_stderr(0,"[%s][%d]"
+							 "file[%d].name=%s",
+							 __FUNCTION__,
+							 __LINE__,
+							 i,
+							 file[i].name.data);
+		#endif
         file[i].fd = ngx_open_file(file[i].name.data,
                                    NGX_FILE_APPEND,
                                    NGX_FILE_CREATE_OR_OPEN,
@@ -616,6 +709,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
+	// 打开新监听socket
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
@@ -626,13 +720,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* commit the new cycle configuration */
-
+	// 输出重定向到stderr
     if (!ngx_use_stderr) {
         (void) ngx_log_redirect_stderr(cycle);
     }
 
     pool->log = cycle->log;
 
+	// 初始化模块
+	// 目前主要初始化(ngx_event_core_module/ngx_http_v2_module)
     if (ngx_init_modules(cycle) != NGX_OK) {
         /* fatal */
         exit(1);

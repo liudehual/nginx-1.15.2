@@ -603,7 +603,7 @@ ngx_create_paths(ngx_cycle_t *cycle, ngx_uid_t user)
 
     path = cycle->paths.elts;
     for (i = 0; i < cycle->paths.nelts; i++) {
-
+		// 创建用户目录
         if (ngx_create_dir(path[i]->name.data, 0700) == NGX_FILE_ERROR) {
             err = ngx_errno;
             if (err != NGX_EEXIST) {
@@ -618,6 +618,7 @@ ngx_create_paths(ngx_cycle_t *cycle, ngx_uid_t user)
             continue;
         }
 
+		// 修改用户权限(修改用户组等)
 #if !(NGX_WIN32)
         {
         ngx_file_info_t   fi;

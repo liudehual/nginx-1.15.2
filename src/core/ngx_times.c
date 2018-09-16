@@ -77,6 +77,7 @@ ngx_time_init(void)
 }
 
 // 时间更新
+// 缓存时间，循环缓存
 // @:https://blog.csdn.net/wu5215080/article/details/53214299
 void
 ngx_time_update(void)
