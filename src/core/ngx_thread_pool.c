@@ -397,6 +397,7 @@ ngx_thread_pool_handler(ngx_event_t *ev)
 static void *
 ngx_thread_pool_create_conf(ngx_cycle_t *cycle)
 {
+	// 初始化线程池配置结构
     ngx_thread_pool_conf_t  *tcf;
 
     tcf = ngx_pcalloc(cycle->pool, sizeof(ngx_thread_pool_conf_t));

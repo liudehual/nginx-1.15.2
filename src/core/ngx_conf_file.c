@@ -178,7 +178,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         /* open configuration file */
 
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
-		#ifdef MY_DEBUG
+		#if 0
 		ngx_log_stderr(0,"[%s][%d] "
 						 "filename->data=%s",
 						 __FUNCTION__,
@@ -391,12 +391,12 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             if (ngx_strcmp(name->data, cmd->name.data) != 0) {
                 continue;
             }
-#ifdef MY_DEBUG
+#if 0
 			ngx_log_stderr(0,"-----------------------------------------------"
 							 "-----------------------------------------------"
 							 "\n[%s][%d]",__FUNCTION__,__LINE__);
 #endif
-#ifdef MY_DEBUG
+#if 0
 							ngx_log_stderr(0,"[%s][%d] cf->cycle->modules[%d]->commands->name=%s",
 												__FUNCTION__,
 												__LINE__,

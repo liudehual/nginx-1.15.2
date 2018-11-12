@@ -75,6 +75,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
     pool->log = log;
 
+	// cycle结构申请内存空间
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
     if (cycle == NULL) {
         ngx_destroy_pool(pool);
@@ -238,14 +239,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	// 初始化队列
     ngx_queue_init(&cycle->reusable_connections_queue);
 
-
+	// conf_ctx数组申请内存空间
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
     if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
-
+	// 获取主机名
     if (gethostname(hostname, NGX_MAXHOSTNAMELEN) == -1) {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "gethostname() failed");
         ngx_destroy_pool(pool);
@@ -284,7 +285,17 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
 	// 为所有的核心模块创建配置信息
-    for (i = 0; cycle->modules[i]; i++) {
+	// 调用核心模块create_conf回调函数，并将create_conf返回的结构添加到conf_ctx数组
+	// 拥有create_conf回调函数的模块有
+	// 		ngx_core_module (OK)
+	//		ngx_event_core_module(OK)
+	//		ngx_openssl_module (NO) 
+	// 		ngx_google_perftools_module (NO)
+	// 		ngx_regex_module (NO)
+	// 		ngx_thread_pool_module (OK)
+	//		注:以上模块不一定会被编译进ngx_modules数组
+	
+	for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
         }
@@ -298,7 +309,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 return NULL;
             }
 			#ifdef MY_DEBUG
-			ngx_log_stderr(0,"[%s][%d]"
+			ngx_log_stderr(0,"[%s][%d] create_conf "
                            "cycle->modules[%d]: "
                            "name=%s "
                            "ctx_index=%d",
@@ -327,6 +338,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	#endif
 
     ngx_memzero(&conf, sizeof(ngx_conf_t));
+
+	// 初始化参数数组
     /* STUB: init array ? */
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
     if (conf.args == NULL) {
@@ -351,12 +364,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
+
 	// 初始化配置文件参数
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
+	
 	// 解析配置文件(nginx.conf)(此处需要详细分析)
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
@@ -368,7 +383,12 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_log_stderr(0, "the configuration file %s syntax is ok",
                        cycle->conf_file.data);
     }
+	
 	// 初始化所有核心模块
+	// 拥有init_conf回调函数的模块:
+	// 		ngx_core_module
+	//		ngx_events_module
+	//		ngx_event_core_module
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -386,7 +406,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 return NULL;
             }
 			#ifdef MY_DEBUG
-			ngx_log_stderr(0,"[%s][%d]"
+			ngx_log_stderr(0,"[%s][%d] init_conf "
                            "cycle->modules[%d]: "
                            "name=%s "
                            "ctx_index=%d",

@@ -326,6 +326,32 @@ main(int argc, char *const *argv)
 
         return 1;
     }
+	
+	//打印conf_ctx数组 
+#if 1
+	for(i=0;i<ngx_max_module;i++){
+		void *ptr=cycle->conf_ctx[i];
+		ngx_log_stderr(0,"[%s][%d] conf_ctx[%d]=%p",
+								__FUNCTION__,
+								__LINE__,
+								i,
+								cycle->conf_ctx[i]);
+		if(ptr){
+			if(cycle->conf_ctx[cycle->modules[i]->index]){
+				ngx_log_stderr(0,"[%s][%d] create_conf "
+							   "cycle->modules[%d]: "
+							   "name=%s "
+							   "ctx_index=%d",
+							   __FUNCTION__,
+							   __LINE__,
+							   i,
+							   cycle->modules[i]->name,
+							   cycle->modules[i]->index);
+
+			}
+		}
+	}
+#endif
 
     if (ngx_test_config) {
         if (!ngx_quiet_mode) {
@@ -1055,6 +1081,7 @@ ngx_process_options(ngx_cycle_t *cycle)
 static void *
 ngx_core_module_create_conf(ngx_cycle_t *cycle)
 {
+	// 初始化核心配置结构
     ngx_core_conf_t  *ccf;
 
     ccf = ngx_pcalloc(cycle->pool, sizeof(ngx_core_conf_t));
