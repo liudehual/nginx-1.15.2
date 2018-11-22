@@ -235,13 +235,13 @@ struct ngx_module_s {
     ngx_command_t        *commands;
     ngx_uint_t            type;
 
-    ngx_int_t           (*init_master)(ngx_log_t *log);
+    ngx_int_t           (*init_master)(ngx_log_t *log);// 未使用
 
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
 
     ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
-    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
-    void                (*exit_thread)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);// 未使用
+    void                (*exit_thread)(ngx_cycle_t *cycle);// 未使用
     void                (*exit_process)(ngx_cycle_t *cycle);
 
     void                (*exit_master)(ngx_cycle_t *cycle);

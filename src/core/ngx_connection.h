@@ -16,9 +16,11 @@
 typedef struct ngx_listening_s  ngx_listening_t;
 
 struct ngx_listening_s {
+	// 监听文件描述符
     ngx_socket_t        fd;
-
+	// 地址信息结构
     struct sockaddr    *sockaddr;
+	// sockaddr 结构长度
     socklen_t           socklen;    /* size of sockaddr */
     size_t              addr_text_max_len;
     ngx_str_t           addr_text;
@@ -26,14 +28,16 @@ struct ngx_listening_s {
     int                 type;
 
     int                 backlog;
+	// 接收缓冲区大小
     int                 rcvbuf;
+	// 发送缓冲区大小
     int                 sndbuf;
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
     int                 keepidle;
     int                 keepintvl;
     int                 keepcnt;
 #endif
-
+	// 链接到达处理句柄
     /* handler of accepted connection */
     ngx_connection_handler_pt   handler;
 
