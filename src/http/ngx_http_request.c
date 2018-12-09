@@ -1354,6 +1354,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             continue;
         }
 
+		// 数据头解析完毕
         if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
 
             /* a whole header has been parsed successfully */

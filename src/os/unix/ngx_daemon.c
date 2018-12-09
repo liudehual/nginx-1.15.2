@@ -13,7 +13,7 @@ ngx_int_t
 ngx_daemon(ngx_log_t *log)
 {
     int  fd;
-
+	fprintf(stdout,"[%s][%d] \n",__FUNCTION__,__LINE__);
     switch (fork()) {
     case -1:
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "fork() failed");

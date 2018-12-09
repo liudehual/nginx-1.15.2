@@ -293,13 +293,32 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
 {
     ngx_uint_t  i;
 
+	ngx_log_stderr(0,"1.+++++++++++++++++++++++++++++++++++++ \n");
+
+#if 1
+	// 设置系统环境变量
     if (ngx_set_environment(cycle, NULL) == NULL) {
         /* fatal */
         exit(2);
     }
+#endif
 
+	ngx_log_stderr(0,"2.+++++++++++++++++++++++++++++++++++++ \n");
+
+	// 遍历所有模块，调用 init_process 回调函数
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->init_process) {
+			#if 1
+				ngx_log_stderr(0,"[%s][%d] init_process "
+							   "cycle->modules[%d]: "
+							   "name=%s "
+							   "ctx_index=%d",
+							   __FUNCTION__,
+							   __LINE__,
+							   i,
+							   cycle->modules[i]->name,
+							   cycle->modules[i]->index);	
+			#endif
             if (cycle->modules[i]->init_process(cycle) == NGX_ERROR) {
                 /* fatal */
                 exit(2);
@@ -307,12 +326,14 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
         }
     }
 
+	// 进入循环等待事件
     for ( ;; ) {
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
-
+		
 		// 处理事件 网络读写、定时器
         ngx_process_events_and_timers(cycle);
 
+		// 发生异常或收到退出指令，执行模块 exit_process 接口
         if (ngx_terminate || ngx_quit) {
 
             for (i = 0; cycle->modules[i]; i++) {
@@ -320,10 +341,10 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
                     cycle->modules[i]->exit_process(cycle);
                 }
             }
-
+			// 主进程退出
             ngx_master_process_exit(cycle);
         }
-
+		// 重新配置
         if (ngx_reconfigure) {
             ngx_reconfigure = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
@@ -336,7 +357,7 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
 
             ngx_cycle = cycle;
         }
-
+		// 重新打开
         if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");

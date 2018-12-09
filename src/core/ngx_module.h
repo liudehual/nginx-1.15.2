@@ -220,32 +220,53 @@
 
 
 struct ngx_module_s {
-    ngx_uint_t            ctx_index;
-    ngx_uint_t            index;
 
+	/*
+		分类的模块计数器
+		nginx模块可以分为四种：core、event、http和mail
+		每个模块都会各自计数，ctx_index就是每个模块在其所属类组的计数
+	*/
+    ngx_uint_t            ctx_index;
+	
+	/*
+	 	一个模块计数器，按照每个模块在ngx_modules[]数组中的声明顺序(下标)，从0开始依次给每个模块赋值
+	*/
+	ngx_uint_t            index;
+
+	/*
+		模块名
+	*/	
     char                 *name;
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
-
+	
+	// 模块版本
     ngx_uint_t            version;
-    const char           *signature;
 
+	const char           *signature;
+
+	// 指向模块的自定义上下文结构体
     void                 *ctx;
+	
+	// 执行模块的命令集
     ngx_command_t        *commands;
+	
+	// 模块类型
     ngx_uint_t            type;
 
-    ngx_int_t           (*init_master)(ngx_log_t *log);// 未使用
+    ngx_int_t           (*init_master)(ngx_log_t *log);//初始化master
 
-    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_module)(ngx_cycle_t *cycle); //初始化模块
 
-    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
-    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);// 未使用
-    void                (*exit_thread)(ngx_cycle_t *cycle);// 未使用
+    ngx_int_t           (*init_process)(ngx_cycle_t *cycle); //初始化进程
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);	 //初始化线程
+    void                (*exit_thread)(ngx_cycle_t *cycle);  // 未使用
     void                (*exit_process)(ngx_cycle_t *cycle);
 
     void                (*exit_master)(ngx_cycle_t *cycle);
 
+	//保留字段，无用，可以使用NGX_MODULE_V1_PADDING来替换
     uintptr_t             spare_hook0;
     uintptr_t             spare_hook1;
     uintptr_t             spare_hook2;

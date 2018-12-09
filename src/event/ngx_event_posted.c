@@ -20,15 +20,17 @@ ngx_event_process_posted(ngx_cycle_t *cycle, ngx_queue_t *posted)
     ngx_queue_t  *q;
     ngx_event_t  *ev;
 	
-	// bianzhi队列执行所有事件句柄
+	// 遍历队列执行所有事件句柄
     while (!ngx_queue_empty(posted)) {
 
         q = ngx_queue_head(posted);
         ev = ngx_queue_data(q, ngx_event_t, queue);
 
-        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                      "posted event %p", ev);
-
+        //ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+        //              "posted event %p", ev);
+        
+		ngx_log_stderr(0,"[%s][%d] posted event %p",__FUNCTION__,__LINE__,ev);
+		
         ngx_delete_posted_event(ev);
 
         ev->handler(ev);

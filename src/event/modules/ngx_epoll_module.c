@@ -797,9 +797,10 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     /* NGX_TIMER_INFINITE == INFTIM */
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                   "epoll timer: %M", timer);
+    //ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+    //               "epoll timer: %M", timer);
 
+	ngx_log_stderr(0,"epoll timer: %M", timer);
 	// 等待事件到来
 	// 文件描述符 读、写、异常、超时时间
     events = epoll_wait(ep, event_list, (int) nevents, timer);
@@ -828,6 +829,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         return NGX_ERROR;
     }
 
+	// 超时
     if (events == 0) {
         if (timer != NGX_TIMER_INFINITE) {
             return NGX_OK;
@@ -837,13 +839,14 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
                       "epoll_wait() returned no events without timeout");
         return NGX_ERROR;
     }
-
+	// 循环处理事件
     for (i = 0; i < events; i++) {
         c = event_list[i].data.ptr;
 
         instance = (uintptr_t) c & 1;
         c = (ngx_connection_t *) ((uintptr_t) c & (uintptr_t) ~1);
 
+		//ngx_log_stderr(0,"sockaddr=%p",c->sockaddr);
         rev = c->read;
 
         if (c->fd == -1 || rev->instance != instance) {
@@ -860,7 +863,10 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
         revents = event_list[i].events;
 
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+        //ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+        //               "epoll: fd:%d ev:%04XD d:%p",
+        //               c->fd, revents, event_list[i].data.ptr);
+        ngx_log_stderr(0,
                        "epoll: fd:%d ev:%04XD d:%p",
                        c->fd, revents, event_list[i].data.ptr);
 
@@ -896,7 +902,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 #endif
 
             rev->ready = 1;
-
+			ngx_log_stderr(0,"[%s][%d] flags=%d NGX_POST_EVENTS=%d  <----",__FUNCTION__,__LINE__,flags,NGX_POST_EVENTS);
             if (flags & NGX_POST_EVENTS) {
                 queue = rev->accept ? &ngx_posted_accept_events
                                     : &ngx_posted_events;

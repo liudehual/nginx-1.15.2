@@ -57,7 +57,7 @@ ngx_preinit_modules(void)
 
 
 ngx_int_t
-ngx_cycle_modules(ngx_cycle_t *cycle)
+           ngx_cycle_modules(ngx_cycle_t *cycle)
 {
     /*
      * create a list of modules to be used for this cycle,
@@ -69,9 +69,8 @@ ngx_cycle_modules(ngx_cycle_t *cycle)
     if (cycle->modules == NULL) {
         return NGX_ERROR;
     }
-
-    ngx_memcpy(cycle->modules, ngx_modules,
-               ngx_modules_n * sizeof(ngx_module_t *));
+	// 拷贝ngx_modules数组至cycle->Modules数组
+    ngx_memcpy(cycle->modules,ngx_modules,ngx_modules_n * sizeof(ngx_module_t *));
 
     cycle->modules_n = ngx_modules_n;
 

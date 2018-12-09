@@ -82,8 +82,11 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
+	// 内存池
     cycle->pool = pool;
+	// 记录日志
     cycle->log = log;
+	//
     cycle->old_cycle = old_cycle;
 
 	// 初始化配置文件路径

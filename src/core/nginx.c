@@ -417,7 +417,7 @@ main(int argc, char *const *argv)
     if (ngx_create_pidfile(&ccf->pid, cycle->log) != NGX_OK) {
         return 1;
     }
-
+#if 1
     if (ngx_log_redirect_stderr(cycle) != NGX_OK) {
         return 1;
     }
@@ -430,13 +430,34 @@ main(int argc, char *const *argv)
     }
 
 	// 将所有输出全部重定向到stderr(不成功???)
-    //ngx_use_stderr = 0;
+    ngx_use_stderr = 0;
 
+	
+#endif
+	// 单进程模式
+	ngx_log_stderr(0,"[%s][%d] start nginx",__FUNCTION__,__LINE__);
     if (ngx_process == NGX_PROCESS_SINGLE) {
-        ngx_single_process_cycle(cycle);
+		ngx_log_stderr(0,"[%s][%d]Single Process",__FUNCTION__,__LINE__);
+		/*
+			 ngx_single_process_cycle 
+				---> ngx_process_events_and_timers 
+				---> ngx_epoll_process_events  
+				---> ngx_event_accept
+				---> ngx_http_init_connection
+				---> ngx_http_wait_request_handler
+				---> ngx_http_process_request_line
+				---> ngx_http_process_request_headers
+				---> ngx_http_process_request
+				---> ngx_http_handler
+				---> ngx_http_core_run_phases
+				---> 进入http处理11阶段，遍历所有模块句柄
+		*/
 
-    } else {
+	ngx_single_process_cycle(cycle);
+
+    } else {// 多进程模式
         ngx_master_process_cycle(cycle);
+		ngx_log_stderr(0,"[%s][%d]Mult Process",__FUNCTION__,__LINE__);
     }
 
     return 0;
@@ -528,7 +549,6 @@ ngx_add_inherited_sockets(ngx_cycle_t *cycle)
                   "using inherited sockets from \"%s\"", inherited);
 
 	// 创建监听文件描述符数组
-	// 为什么是10个的长度???
     if (ngx_array_init(&cycle->listening, cycle->pool, 10,
                        sizeof(ngx_listening_t))
         != NGX_OK)

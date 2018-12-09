@@ -280,7 +280,8 @@ ngx_log_stderr(ngx_err_t err, const char *fmt, ...)
 
     ngx_linefeed(p);
 
-    (void) ngx_write_console(ngx_stderr, errstr, p - errstr);
+    //(void) ngx_write_console(ngx_stderr, errstr, p - errstr);
+    (void) ngx_write_console(0, errstr, p - errstr);
 }
 
 

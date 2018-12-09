@@ -214,8 +214,10 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
 #endif
     }
-
+	// 加锁，单进程模式下无用
     if (ngx_use_accept_mutex) {
+		
+		ngx_log_stderr(0,"ngx_use_accept_mutex=%d",ngx_use_accept_mutex);
         if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
 
@@ -239,16 +241,23 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     delta = ngx_current_msec;
-
+	// epoll 		---> ngx_epoll_process_events		(ngx_devpoll_module.c)
+	// devpoll 		---> ngx_devpoll_process_events		(ngx_epoll_module.c)
+	// eventport 	---> ngx_eventport_process_events	(ngx_eventport_module.c)
+	// kqueue 		---> ngx_kqueue_process_events		(ngx_kqueue_module.c)
+	// poll 		---> ngx_poll_process_events		(ngx_poll_module.c)
+	// select 		---> ngx_select_process_events		(ngx_select_module.c)
+	// win32_select ---> ngx_select_process_events		(ngx_win32_select_module.c)
     (void) ngx_process_events(cycle, timer, flags);
 	
 	// delta=当前时间 - 执行ngx_process_events时间(处理网络时间、超时等)
 	// delta大于0，说明已经过去了一段时间，需要处理定时器
     delta = ngx_current_msec - delta;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                   "timer delta: %M", delta);
+    //ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
+    //               "timer delta: %M", delta);
 
+	ngx_log_stderr(0,"timer delta:%M",delta);
 	// 处理新连接到达事件
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
